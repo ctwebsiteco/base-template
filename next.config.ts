@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+      },
+    ],
+  },
+  async redirects() {
+    return [
+      // Add SEO redirects here when replacing an existing site
+    ];
+  },
 };
 
 export default nextConfig;
