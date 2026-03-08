@@ -6,7 +6,8 @@ import { VisualEditing } from "next-sanity/visual-editing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
-import { SanityLive } from "@/sanity/lib/live";
+import { SanityLive, sanityFetch } from "@/sanity/lib/live";
+import { isSanityConfigured } from "@/sanity/lib/client";
 import { DisableDraftMode } from "@/components/disable-draft-mode";
 
 import "./globals.css";
@@ -56,8 +57,8 @@ export default async function RootLayout({
         <SiteHeader />
         <main>{children}</main>
         <SiteFooter />
-        <SanityLive />
-        {isDraft && (
+        {isSanityConfigured && SanityLive && <SanityLive />}
+        {isDraft && isSanityConfigured && (
           <>
             <VisualEditing />
             <DisableDraftMode />
