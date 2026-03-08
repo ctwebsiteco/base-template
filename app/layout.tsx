@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Open_Sans } from "next/font/google";
 import { draftMode } from "next/headers";
 import { VisualEditing } from "next-sanity/visual-editing";
 import { SiteHeader } from "@/components/site-header";
@@ -11,19 +11,24 @@ import { DisableDraftMode } from "@/components/disable-draft-mode";
 
 import "./globals.css";
 
-// TODO: Replace with client brand font
-const inter = Inter({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-serif",
+  display: "swap",
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
-// TODO: Update title, description, and domain for the client site
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://fancybagels.com";
+
 export const metadata: Metadata = {
-  title: "Business Name | City, ST | Services",
+  title: "Fancy Bagels | Southington, CT | Best Bagels Since 1988",
   description:
-    "Business description — services offered, location, and key differentiators. Update this for the client site.",
+    "Fancy Bagels in Southington, CT - Crafting fresh, authentic NY-style bagels, hearty breakfast sandwiches, and specialty coffee since 1988. Order online or visit us today!",
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: "/",
@@ -33,11 +38,11 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: "Business Name | City, ST",
+    title: "Fancy Bagels | Southington, CT | Best Bagels Since 1988",
     description:
-      "Business description for social sharing. Update this for the client site.",
+      "Crafting fresh, authentic NY-style bagels, hearty breakfast sandwiches, and specialty coffee since 1988. Magic in Every Fancy Day!",
     url: BASE_URL,
-    siteName: "Business Name",
+    siteName: "Fancy Bagels",
     type: "website",
   },
 };
@@ -50,7 +55,7 @@ export default async function RootLayout({
   const { isEnabled: isDraft } = await draftMode();
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${playfair.variable} ${openSans.variable}`}>
       <body className="font-sans antialiased">
         <JsonLd />
         <SiteHeader />

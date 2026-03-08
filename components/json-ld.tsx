@@ -12,17 +12,20 @@ export async function JsonLd() {
     // Sanity not configured — use minimal fallback
   }
 
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://fancybagels.com";
 
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: company?.name || "Business Name",
+    "@type": "Restaurant",
+    name: company?.name || "Fancy Bagels",
     description:
       company?.description ||
-      "Local business providing quality services to the community.",
+      "Fancy Bagels in Southington, CT - Crafting fresh, authentic NY-style bagels, hearty breakfast sandwiches, and specialty coffee since 1988.",
     url: BASE_URL,
-    telephone: company?.phone || "(555) 555-5555",
+    telephone: company?.phone || "(860) 621-0055",
+    servesCuisine: "Bagels, Breakfast, Deli",
+    image: `${BASE_URL}/images/fancy-bagels-hero.jpg`,
+    menu: `${BASE_URL}/menu`,
   };
 
   if (company?.email) {
@@ -32,8 +35,10 @@ export async function JsonLd() {
   if (company?.address) {
     schema.address = {
       "@type": "PostalAddress",
-      addressLocality: company.address.city,
-      addressRegion: company.address.state,
+      streetAddress: company.address.street || "405 Queen St",
+      addressLocality: company.address.city || "Southington",
+      addressRegion: company.address.state || "CT",
+      postalCode: company.address.postalCode || "06489",
       addressCountry: company.address.country || "US",
     };
     if (company.address.latitude && company.address.longitude) {
@@ -43,11 +48,39 @@ export async function JsonLd() {
         longitude: company.address.longitude,
       };
     }
+  } else {
+    schema.address = {
+      "@type": "PostalAddress",
+      streetAddress: "405 Queen St (Route 10)",
+      addressLocality: "Southington",
+      addressRegion: "CT",
+      postalCode: "06489",
+      addressCountry: "US",
+    };
   }
 
-  if (company?.priceRange) {
-    schema.priceRange = company.priceRange;
-  }
+  schema.priceRange = company?.priceRange || "$";
+
+  schema.openingHoursSpecification = [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "06:00",
+      closes: "14:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "06:30",
+      closes: "14:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Sunday",
+      opens: "07:00",
+      closes: "13:30",
+    },
+  ];
 
   if (company?.aggregateRating) {
     schema.aggregateRating = {
