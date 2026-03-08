@@ -4,10 +4,12 @@ import { COMPANY_INFO_QUERY } from "@/sanity/lib/queries";
 export default async function HomePage() {
   let company = null;
 
-  try {
-    company = await client.fetch(COMPANY_INFO_QUERY);
-  } catch {
-    // Sanity not configured — use fallback content
+  if (client) {
+    try {
+      company = await client.fetch(COMPANY_INFO_QUERY);
+    } catch {
+      // Sanity fetch failed — use fallback content
+    }
   }
 
   const name = company?.name ?? "Business Name";
