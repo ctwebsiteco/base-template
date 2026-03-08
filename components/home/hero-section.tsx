@@ -12,7 +12,7 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ data }: HeroSectionProps) {
-  const heroImageUrl = data?.heroImageUrl || "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gemini_Generated_Image_v6k6iv6k6iv6k6iv.png-zBiLhtX14Gkh4UzskDhFu33PmKOy65.jpeg";
+  const heroImageUrl = data?.heroImageUrl || "/images/hero-bagel.jpg";
   const heroImageAlt = data?.heroImageAlt || "Delicious bacon, egg, and cheese breakfast sandwich on an everything bagel";
   const welcomeTitle = data?.welcomeTitle || "WELCOME TO FANCY BAGELS";
   const welcomeSubtitle = data?.welcomeSubtitle || "in Southington.";
@@ -29,7 +29,6 @@ export function HeroSection({ data }: HeroSectionProps) {
           fill
           className="object-cover object-center"
           priority
-          unoptimized
         />
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/40 to-transparent" />
