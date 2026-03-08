@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const PORT = process.env.CI ? 3000 : 3100;
+
 export default defineConfig({
   testDir: "__tests__/e2e",
   fullyParallel: true,
@@ -8,7 +10,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -18,8 +20,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
+    command: `pnpm dev --port ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     env: {
