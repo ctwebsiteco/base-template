@@ -1,4 +1,6 @@
 import { Metadata } from "next";
+import { sanityFetch } from "@/sanity/lib/live";
+import { MENU_CATEGORIES_QUERY } from "@/sanity/lib/queries";
 
 export const metadata: Metadata = {
   title: "Menu | Fancy Bagels | Breakfast & Lunch in Southington, CT",
@@ -6,56 +8,77 @@ export const metadata: Metadata = {
     "Explore our menu of fresh NY-style bagels, breakfast sandwiches, lunch wraps, deli options, and specialty coffee at Fancy Bagels in Southington, CT.",
 };
 
-const menuCategories = [
-  {
-    title: "Breakfast Sandwiches",
-    description: "Start your day the Fancy way",
-    items: [
-      { name: "The Classic", description: "Bacon, egg & cheese on your choice of bagel", price: "$6.99" },
-      { name: "Sausage, Egg & Cheese", description: "Savory sausage patty with egg and melted cheese", price: "$7.49" },
-      { name: "Western Omelette", description: "Ham, peppers, onions, egg & cheese", price: "$7.99" },
-      { name: "Veggie Delight", description: "Egg whites, spinach, tomato, avocado & Swiss", price: "$7.99" },
-      { name: "The Fancy Special", description: "Taylor ham, egg, cheese with hash browns on a everything bagel", price: "$8.99" },
-    ],
-  },
-  {
-    title: "NY Style Bagels & Spreads",
-    description: "Authentic, kettle-boiled perfection",
-    items: [
-      { name: "Plain Bagel", description: "Classic and simple", price: "$1.99" },
-      { name: "Everything Bagel", description: "Sesame, poppy, garlic, onion, salt", price: "$1.99" },
-      { name: "Sesame Bagel", description: "Topped with toasted sesame seeds", price: "$1.99" },
-      { name: "Cinnamon Raisin", description: "Sweet and satisfying", price: "$2.29" },
-      { name: "Cream Cheese (Plain)", description: "House-whipped, generous portion", price: "$1.50" },
-      { name: "Veggie Cream Cheese", description: "Loaded with fresh vegetables", price: "$2.00" },
-      { name: "Lox Spread", description: "Premium smoked salmon cream cheese", price: "$2.50" },
-    ],
-  },
-  {
-    title: "Lunch Wraps & Deli",
-    description: "Fresh and filling options",
-    items: [
-      { name: "Turkey Club Wrap", description: "Turkey, bacon, lettuce, tomato, mayo", price: "$9.99" },
-      { name: "Italian Sub", description: "Ham, salami, capicola, provolone, oil & vinegar", price: "$10.99" },
-      { name: "Chicken Caesar Wrap", description: "Grilled chicken, romaine, parmesan, Caesar dressing", price: "$9.99" },
-      { name: "BLT Deluxe", description: "Extra bacon, lettuce, tomato, mayo on toast", price: "$8.99" },
-      { name: "Tuna Melt", description: "House-made tuna salad with melted cheddar", price: "$8.99" },
-    ],
-  },
-  {
-    title: "Coffee & Beverages",
-    description: "Handcrafted drinks",
-    items: [
-      { name: "Drip Coffee", description: "Fresh brewed, locally roasted", price: "$2.49" },
-      { name: "Latte", description: "Espresso with steamed milk", price: "$4.49" },
-      { name: "Cappuccino", description: "Espresso with foamed milk", price: "$4.49" },
-      { name: "Cold Brew", description: "Smooth, 24-hour steeped", price: "$3.99" },
-      { name: "Fresh OJ", description: "Squeezed daily", price: "$3.49" },
-    ],
-  },
-];
+interface MenuItem {
+  _key: string;
+  name: string;
+  description: string;
+  price: string;
+}
 
-export default function MenuPage() {
+interface MenuCategory {
+  _id: string;
+  title: string;
+  description: string;
+  items: MenuItem[];
+}
+
+export default async function MenuPage() {
+  const { data: categories } = await sanityFetch({ query: MENU_CATEGORIES_QUERY });
+
+  // Fallback data if Sanity is empty
+  const menuCategories: MenuCategory[] = categories?.length > 0 ? categories : [
+    {
+      _id: "breakfast",
+      title: "Breakfast Sandwiches",
+      description: "Start your day the Fancy way",
+      items: [
+        { _key: "1", name: "The Classic", description: "Bacon, egg & cheese on your choice of bagel", price: "$6.99" },
+        { _key: "2", name: "Sausage, Egg & Cheese", description: "Savory sausage patty with egg and melted cheese", price: "$7.49" },
+        { _key: "3", name: "Western Omelette", description: "Ham, peppers, onions, egg & cheese", price: "$7.99" },
+        { _key: "4", name: "Veggie Delight", description: "Egg whites, spinach, tomato, avocado & Swiss", price: "$7.99" },
+        { _key: "5", name: "The Fancy Special", description: "Taylor ham, egg, cheese with hash browns on an everything bagel", price: "$8.99" },
+      ],
+    },
+    {
+      _id: "bagels",
+      title: "NY Style Bagels & Spreads",
+      description: "Authentic, kettle-boiled perfection",
+      items: [
+        { _key: "1", name: "Plain Bagel", description: "Classic and simple", price: "$1.99" },
+        { _key: "2", name: "Everything Bagel", description: "Sesame, poppy, garlic, onion, salt", price: "$1.99" },
+        { _key: "3", name: "Sesame Bagel", description: "Topped with toasted sesame seeds", price: "$1.99" },
+        { _key: "4", name: "Cinnamon Raisin", description: "Sweet and satisfying", price: "$2.29" },
+        { _key: "5", name: "Cream Cheese (Plain)", description: "House-whipped, generous portion", price: "$1.50" },
+        { _key: "6", name: "Veggie Cream Cheese", description: "Loaded with fresh vegetables", price: "$2.00" },
+        { _key: "7", name: "Lox Spread", description: "Premium smoked salmon cream cheese", price: "$2.50" },
+      ],
+    },
+    {
+      _id: "lunch",
+      title: "Lunch Wraps & Deli",
+      description: "Fresh and filling options",
+      items: [
+        { _key: "1", name: "Turkey Club Wrap", description: "Turkey, bacon, lettuce, tomato, mayo", price: "$9.99" },
+        { _key: "2", name: "Italian Sub", description: "Ham, salami, capicola, provolone, oil & vinegar", price: "$10.99" },
+        { _key: "3", name: "Chicken Caesar Wrap", description: "Grilled chicken, romaine, parmesan, Caesar dressing", price: "$9.99" },
+        { _key: "4", name: "BLT Deluxe", description: "Extra bacon, lettuce, tomato, mayo on toast", price: "$8.99" },
+        { _key: "5", name: "Tuna Melt", description: "House-made tuna salad with melted cheddar", price: "$8.99" },
+      ],
+    },
+    {
+      _id: "beverages",
+      title: "Coffee & Beverages",
+      description: "Handcrafted drinks",
+      items: [
+        { _key: "1", name: "Drip Coffee", description: "Fresh brewed, locally roasted", price: "$2.49" },
+        { _key: "2", name: "Latte", description: "Espresso with steamed milk", price: "$4.49" },
+        { _key: "3", name: "Cappuccino", description: "Espresso with foamed milk", price: "$4.49" },
+        { _key: "4", name: "Cold Brew", description: "Smooth, 24-hour steeped", price: "$3.99" },
+        { _key: "5", name: "Fresh OJ", description: "Squeezed daily", price: "$3.49" },
+      ],
+    },
+  ];
+
   return (
     <div className="bg-background">
       {/* Hero */}
@@ -72,7 +95,7 @@ export default function MenuPage() {
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-5xl px-4">
           {menuCategories.map((category, idx) => (
-            <div key={category.title} className={idx > 0 ? "mt-12 md:mt-16" : ""}>
+            <div key={category._id} className={idx > 0 ? "mt-12 md:mt-16" : ""}>
               <div className="text-center mb-8">
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground">
                   {category.title}
@@ -86,9 +109,9 @@ export default function MenuPage() {
               </div>
 
               <div className="space-y-4">
-                {category.items.map((item) => (
+                {category.items?.map((item) => (
                   <div
-                    key={item.name}
+                    key={item._key}
                     className="flex items-start justify-between gap-4 border-b border-border/50 pb-4"
                   >
                     <div className="flex-1">

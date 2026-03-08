@@ -60,7 +60,21 @@ function CateringIcon({ className }: { className?: string }) {
   );
 }
 
-export function FeatureCards() {
+interface FeatureCardsProps {
+  data: {
+    menuCardTitle?: string;
+    menuCardSubtitle?: string;
+    cateringCardTitle?: string;
+    cateringCardSubtitle?: string;
+  } | null;
+}
+
+export function FeatureCards({ data }: FeatureCardsProps) {
+  const menuTitle = data?.menuCardTitle || "OUR MENU:";
+  const menuSubtitle = data?.menuCardSubtitle || "EXPLORE BREW & BAKE";
+  const cateringTitle = data?.cateringCardTitle || "CATERING:";
+  const cateringSubtitle = data?.cateringCardSubtitle || "PERFECT PLATTERS";
+
   return (
     <section className="bg-secondary/50 py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-4">
@@ -69,10 +83,10 @@ export function FeatureCards() {
           <div className="bg-card border-2 border-primary p-6 md:p-8 flex items-center justify-between gap-4 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex-1">
               <h2 className="font-serif text-xl md:text-2xl font-bold text-foreground">
-                OUR MENU:
+                {menuTitle}
               </h2>
               <p className="text-lg md:text-xl font-medium text-muted-foreground mt-1">
-                EXPLORE BREW & BAKE
+                {menuSubtitle}
               </p>
               <Button asChild className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Link href="/menu">Learn More</Link>
@@ -85,10 +99,10 @@ export function FeatureCards() {
           <div className="bg-card border-2 border-primary p-6 md:p-8 flex items-center justify-between gap-4 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex-1">
               <h2 className="font-serif text-xl md:text-2xl font-bold text-foreground">
-                CATERING:
+                {cateringTitle}
               </h2>
               <p className="text-lg md:text-xl font-medium text-muted-foreground mt-1">
-                PERFECT PLATTERS
+                {cateringSubtitle}
               </p>
               <Button asChild className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Link href="/catering">Learn More</Link>

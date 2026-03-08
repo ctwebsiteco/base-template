@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { MapPin, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { sanityFetch } from "@/sanity/lib/live";
+import { LOCATIONS_QUERY } from "@/sanity/lib/queries";
 
 export const metadata: Metadata = {
   title: "Locations | Fancy Bagels | Find Us in Connecticut",
@@ -8,49 +10,67 @@ export const metadata: Metadata = {
     "Find Fancy Bagels locations in Southington, Plantsville, and Farmington, CT. Get directions, hours, and contact information for each store.",
 };
 
-const locations = [
-  {
-    name: "Southington",
-    address: "405 Queen St. (Route 10)",
-    city: "Southington, CT 06489",
-    phone: "(860) 621-0055",
-    hours: {
-      weekday: "Mon-Fri: 6:00 AM - 2:00 PM",
-      saturday: "Sat: 6:30 AM - 2:00 PM",
-      sunday: "Sun: 7:00 AM - 1:30 PM",
-    },
-    mapUrl: "https://maps.google.com/?q=405+Queen+St+Southington+CT",
-    flagship: true,
-  },
-  {
-    name: "Plantsville",
-    address: "123 Main St.",
-    city: "Plantsville, CT 06479",
-    phone: "(860) 555-0123",
-    hours: {
-      weekday: "Mon-Fri: 6:00 AM - 2:00 PM",
-      saturday: "Sat: 6:30 AM - 2:00 PM",
-      sunday: "Sun: 7:00 AM - 1:30 PM",
-    },
-    mapUrl: "https://maps.google.com/?q=Plantsville+CT",
-    flagship: false,
-  },
-  {
-    name: "Farmington",
-    address: "456 Farmington Ave.",
-    city: "Farmington, CT 06032",
-    phone: "(860) 555-0456",
-    hours: {
-      weekday: "Mon-Fri: 6:00 AM - 2:00 PM",
-      saturday: "Sat: 6:30 AM - 2:00 PM",
-      sunday: "Sun: 7:00 AM - 1:30 PM",
-    },
-    mapUrl: "https://maps.google.com/?q=Farmington+CT",
-    flagship: false,
-  },
-];
+interface Location {
+  _id: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  phone: string;
+  weekdayHours: string;
+  saturdayHours: string;
+  sundayHours: string;
+  mapUrl: string;
+  mapEmbedUrl?: string;
+  isFlagship: boolean;
+}
 
-export default function LocationsPage() {
+export default async function LocationsPage() {
+  const { data: sanityLocations } = await sanityFetch({ query: LOCATIONS_QUERY });
+
+  // Fallback data if Sanity is empty
+  const locations: Location[] = sanityLocations?.length > 0 ? sanityLocations : [
+    {
+      _id: "southington",
+      name: "Southington",
+      slug: "southington",
+      address: "405 Queen St. (Route 10)",
+      city: "Southington, CT 06489",
+      phone: "(860) 621-0055",
+      weekdayHours: "Mon-Fri: 6:00 AM - 2:00 PM",
+      saturdayHours: "Sat: 6:30 AM - 2:00 PM",
+      sundayHours: "Sun: 7:00 AM - 1:30 PM",
+      mapUrl: "https://maps.google.com/?q=405+Queen+St+Southington+CT",
+      isFlagship: true,
+    },
+    {
+      _id: "plantsville",
+      name: "Plantsville",
+      slug: "plantsville",
+      address: "123 Main St.",
+      city: "Plantsville, CT 06479",
+      phone: "(860) 555-0123",
+      weekdayHours: "Mon-Fri: 6:00 AM - 2:00 PM",
+      saturdayHours: "Sat: 6:30 AM - 2:00 PM",
+      sundayHours: "Sun: 7:00 AM - 1:30 PM",
+      mapUrl: "https://maps.google.com/?q=Plantsville+CT",
+      isFlagship: false,
+    },
+    {
+      _id: "farmington",
+      name: "Farmington",
+      slug: "farmington",
+      address: "456 Farmington Ave.",
+      city: "Farmington, CT 06032",
+      phone: "(860) 555-0456",
+      weekdayHours: "Mon-Fri: 6:00 AM - 2:00 PM",
+      saturdayHours: "Sat: 6:30 AM - 2:00 PM",
+      sundayHours: "Sun: 7:00 AM - 1:30 PM",
+      mapUrl: "https://maps.google.com/?q=Farmington+CT",
+      isFlagship: false,
+    },
+  ];
+
   return (
     <div className="bg-background">
       {/* Hero */}
@@ -69,12 +89,12 @@ export default function LocationsPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {locations.map((location) => (
               <div
-                key={location.name}
+                key={location._id}
                 className={`bg-card border-2 p-6 shadow-lg ${
-                  location.flagship ? "border-accent" : "border-primary"
+                  location.isFlagship ? "border-accent" : "border-primary"
                 }`}
               >
-                {location.flagship && (
+                {location.isFlagship && (
                   <span className="inline-block bg-accent text-accent-foreground text-xs font-semibold px-2 py-1 mb-3">
                     FLAGSHIP LOCATION
                   </span>
@@ -105,9 +125,9 @@ export default function LocationsPage() {
                   <div className="flex items-start gap-3">
                     <Clock className="size-5 text-primary mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-muted-foreground">
-                      <p>{location.hours.weekday}</p>
-                      <p>{location.hours.saturday}</p>
-                      <p>{location.hours.sunday}</p>
+                      <p>{location.weekdayHours}</p>
+                      <p>{location.saturdayHours}</p>
+                      <p>{location.sundayHours}</p>
                     </div>
                   </div>
                 </div>

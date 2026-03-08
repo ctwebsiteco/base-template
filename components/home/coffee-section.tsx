@@ -1,10 +1,22 @@
 import Image from "next/image";
 
-export function CoffeeSection() {
+interface CoffeeSectionProps {
+  data: {
+    coffeeSectionImageUrl?: string;
+    coffeeSectionTitle?: string;
+    coffeeSectionSubtitle?: string;
+  } | null;
+}
+
+export function CoffeeSection({ data }: CoffeeSectionProps) {
+  const imageUrl = data?.coffeeSectionImageUrl || "/images/coffee-latte.jpg";
+  const title = data?.coffeeSectionTitle || "Specialty Coffee & More";
+  const subtitle = data?.coffeeSectionSubtitle || "The perfect complement to your bagel";
+
   return (
     <section className="relative h-64 md:h-80 overflow-hidden">
       <Image
-        src="/images/coffee-latte.jpg"
+        src={imageUrl}
         alt="Specialty latte art coffee"
         fill
         className="object-cover"
@@ -13,10 +25,10 @@ export function CoffeeSection() {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-primary-foreground">
           <h2 className="font-serif text-2xl md:text-4xl font-bold">
-            Specialty Coffee & More
+            {title}
           </h2>
           <p className="mt-2 text-lg md:text-xl">
-            The perfect complement to your bagel
+            {subtitle}
           </p>
         </div>
       </div>

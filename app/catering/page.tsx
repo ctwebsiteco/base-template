@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { sanityFetch } from "@/sanity/lib/live";
+import { CATERING_PACKAGES_QUERY } from "@/sanity/lib/queries";
 
 export const metadata: Metadata = {
   title: "Catering | Fancy Bagels | Bagel Platters & Event Catering in CT",
@@ -8,38 +10,54 @@ export const metadata: Metadata = {
     "Order bagel platters, breakfast catering, and coffee service for your next event from Fancy Bagels in Southington, CT. Perfect for meetings, parties, and corporate events.",
 };
 
-const cateringOptions = [
-  {
-    title: "Bagel Platters",
-    description: "Fresh-baked assorted bagels with a variety of cream cheese spreads",
-    servings: "Serves 10-12",
-    price: "Starting at $39.99",
-    includes: ["12 assorted bagels", "3 cream cheese varieties", "Butter", "Serving utensils"],
-  },
-  {
-    title: "Breakfast Sandwich Platter",
-    description: "Assorted breakfast sandwiches for your hungry crowd",
-    servings: "Serves 8-10",
-    price: "Starting at $69.99",
-    includes: ["10 assorted breakfast sandwiches", "Mix of bacon, sausage, and veggie options", "Napkins and plates"],
-  },
-  {
-    title: "Deli Lunch Platter",
-    description: "Premium deli sandwiches and wraps",
-    servings: "Serves 10-12",
-    price: "Starting at $89.99",
-    includes: ["12 half sandwiches/wraps", "Turkey, ham, roast beef, and veggie options", "Pickle spears", "Chips"],
-  },
-  {
-    title: "Coffee & Tea Service",
-    description: "Hot beverages for your meeting or event",
-    servings: "Serves 10-12",
-    price: "Starting at $29.99",
-    includes: ["96 oz fresh brewed coffee", "Assorted teas", "Cream, sugar, stirrers", "Cups and lids"],
-  },
-];
+interface CateringPackage {
+  _id: string;
+  title: string;
+  description: string;
+  servings: string;
+  price: string;
+  includes: string[];
+}
 
-export default function CateringPage() {
+export default async function CateringPage() {
+  const { data: packages } = await sanityFetch({ query: CATERING_PACKAGES_QUERY });
+
+  // Fallback data if Sanity is empty
+  const cateringOptions: CateringPackage[] = packages?.length > 0 ? packages : [
+    {
+      _id: "bagel-platters",
+      title: "Bagel Platters",
+      description: "Fresh-baked assorted bagels with a variety of cream cheese spreads",
+      servings: "Serves 10-12",
+      price: "Starting at $39.99",
+      includes: ["12 assorted bagels", "3 cream cheese varieties", "Butter", "Serving utensils"],
+    },
+    {
+      _id: "breakfast-platter",
+      title: "Breakfast Sandwich Platter",
+      description: "Assorted breakfast sandwiches for your hungry crowd",
+      servings: "Serves 8-10",
+      price: "Starting at $69.99",
+      includes: ["10 assorted breakfast sandwiches", "Mix of bacon, sausage, and veggie options", "Napkins and plates"],
+    },
+    {
+      _id: "deli-platter",
+      title: "Deli Lunch Platter",
+      description: "Premium deli sandwiches and wraps",
+      servings: "Serves 10-12",
+      price: "Starting at $89.99",
+      includes: ["12 half sandwiches/wraps", "Turkey, ham, roast beef, and veggie options", "Pickle spears", "Chips"],
+    },
+    {
+      _id: "coffee-service",
+      title: "Coffee & Tea Service",
+      description: "Hot beverages for your meeting or event",
+      servings: "Serves 10-12",
+      price: "Starting at $29.99",
+      includes: ["96 oz fresh brewed coffee", "Assorted teas", "Cream, sugar, stirrers", "Cups and lids"],
+    },
+  ];
+
   return (
     <div className="bg-background">
       {/* Hero */}
@@ -68,7 +86,7 @@ export default function CateringPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {cateringOptions.map((option) => (
               <div
-                key={option.title}
+                key={option._id}
                 className="bg-card border-2 border-primary p-6 shadow-lg"
               >
                 <h3 className="font-serif text-xl font-bold text-foreground">
@@ -80,8 +98,8 @@ export default function CateringPage() {
                   <span className="font-semibold text-primary">{option.price}</span>
                 </div>
                 <ul className="mt-4 space-y-1">
-                  {option.includes.map((item) => (
-                    <li key={item} className="text-sm text-muted-foreground flex items-center gap-2">
+                  {option.includes?.map((item, idx) => (
+                    <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="size-1.5 bg-primary rounded-full" />
                       {item}
                     </li>
