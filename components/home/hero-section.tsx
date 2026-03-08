@@ -29,6 +29,7 @@ export function HeroSection({ data }: HeroSectionProps) {
           fill
           className="object-cover object-center"
           priority
+          unoptimized
         />
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/40 to-transparent" />
