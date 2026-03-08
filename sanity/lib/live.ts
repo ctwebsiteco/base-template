@@ -1,13 +1,20 @@
 import { defineLive } from "next-sanity/live";
-import { client } from "./client";
+import { client, isSanityConfigured } from "./client";
 
 const token = process.env.SANITY_API_READ_TOKEN;
 
-export const { sanityFetch, SanityLive } = defineLive({
-  client,
-  serverToken: token,
-  browserToken: token,
-  fetchOptions: {
-    revalidate: 60,
-  },
-});
+// Only create live features if Sanity is configured
+const liveConfig =
+  client && isSanityConfigured
+    ? defineLive({
+        client,
+        serverToken: token,
+        browserToken: token,
+        fetchOptions: {
+          revalidate: 60,
+        },
+      })
+    : null;
+
+export const sanityFetch = liveConfig?.sanityFetch ?? null;
+export const SanityLive = liveConfig?.SanityLive ?? null;
