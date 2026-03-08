@@ -90,6 +90,27 @@ export async function submitForm(formData: FormData) {
 
 ### 3. Sanity Integration
 
+The Sanity client is **optional** and can be `null` if `NEXT_PUBLIC_SANITY_PROJECT_ID` is not set. Always check before using:
+
+```typescript
+import { client, isSanityConfigured } from "@/sanity/lib/client"
+
+// In components - always check if client exists:
+let data = null
+if (client) {
+  try {
+    data = await client.fetch(HOMEPAGE_QUERY)
+  } catch {
+    // Sanity fetch failed — use fallback content
+  }
+}
+
+// For conditional rendering:
+if (isSanityConfigured) {
+  // Show Sanity Studio link, etc.
+}
+```
+
 **GROQ Queries**: Use typed GROQ queries in `sanity/lib/queries.ts`:
 
 ```typescript
@@ -100,9 +121,6 @@ export const HOMEPAGE_QUERY = groq`
     "image": image.asset->url,
   }
 `
-
-// In components:
-const data = await client.fetch(HOMEPAGE_QUERY)
 ```
 
 **Schemas**: Define all content types in `sanity/schemas/index.ts` with TypeScript interfaces:
@@ -283,7 +301,9 @@ Include JSON-LD schema via `<JsonLd>` component for rich snippets.
 ## Troubleshooting
 
 **Sanity client errors**
-- Check `NEXT_PUBLIC_SANITY_PROJECT_ID` is set
+- The `client` export can be `null` if `NEXT_PUBLIC_SANITY_PROJECT_ID` is not set
+- Always check `if (client)` before calling `client.fetch()`
+- Use `isSanityConfigured` export to conditionally show Sanity-dependent UI
 - Verify API version is valid date format (YYYY-MM-DD)
 - Ensure dataset exists in Sanity project
 

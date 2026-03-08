@@ -4,12 +4,14 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let companyInfo: any = null;
 
-  try {
-    companyInfo = await client.fetch(
-      `*[_type == "companyInfo"][0] { name, phone, email, address, tagline, description, licensingInfo, businessHours, yearsExperience }`
-    );
-  } catch {
-    // Sanity not configured — use fallback content
+  if (client) {
+    try {
+      companyInfo = await client.fetch(
+        `*[_type == "companyInfo"][0] { name, phone, email, address, tagline, description, licensingInfo, businessHours, yearsExperience }`
+      );
+    } catch {
+      // Sanity fetch failed — use fallback content
+    }
   }
 
   const companyName = companyInfo?.name || "Business Name";

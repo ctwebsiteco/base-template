@@ -4,12 +4,14 @@ export async function JsonLd() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let company: any = null;
 
-  try {
-    company = await client.fetch(
-      `*[_type == "companyInfo"][0] { name, description, phone, email, address, aggregateRating, reviewCount, priceRange, businessHours }`
-    );
-  } catch {
-    // Sanity not configured — use minimal fallback
+  if (client) {
+    try {
+      company = await client.fetch(
+        `*[_type == "companyInfo"][0] { name, description, phone, email, address, aggregateRating, reviewCount, priceRange, businessHours }`
+      );
+    } catch {
+      // Sanity fetch failed — use minimal fallback
+    }
   }
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";

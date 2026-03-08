@@ -59,27 +59,29 @@ export async function submitContactForm(
     let fromEmail = process.env.CONTACT_FROM_EMAIL!;
     let toEmails = process.env.CONTACT_TO_EMAILS!.split(",").map((e) => e.trim());
 
-    try {
-      const token = process.env.SANITY_API_READ_TOKEN;
-      const templates = await client
-        .withConfig({ token, useCdn: false })
-        .fetch(EMAIL_TEMPLATES_QUERY);
-      if (templates?.fromEmail) {
-        fromEmail = templates.fromEmail;
+    if (client) {
+      try {
+        const token = process.env.SANITY_API_READ_TOKEN;
+        const templates = await client
+          .withConfig({ token, useCdn: false })
+          .fetch(EMAIL_TEMPLATES_QUERY);
+        if (templates?.fromEmail) {
+          fromEmail = templates.fromEmail;
+        }
+        if (templates?.toEmails?.length) {
+          toEmails = templates.toEmails;
+        }
+        if (templates?.businessNotification) {
+          businessSubject = templates.businessNotification.subject;
+          businessBody = templates.businessNotification.body;
+        }
+        if (templates?.submitterConfirmation) {
+          confirmationSubject = templates.submitterConfirmation.subject;
+          confirmationBody = templates.submitterConfirmation.body;
+        }
+      } catch {
+        // Sanity fetch failed — use fallback templates and env var emails
       }
-      if (templates?.toEmails?.length) {
-        toEmails = templates.toEmails;
-      }
-      if (templates?.businessNotification) {
-        businessSubject = templates.businessNotification.subject;
-        businessBody = templates.businessNotification.body;
-      }
-      if (templates?.submitterConfirmation) {
-        confirmationSubject = templates.submitterConfirmation.subject;
-        confirmationBody = templates.submitterConfirmation.body;
-      }
-    } catch {
-      // Sanity fetch failed — use fallback templates and env var emails
     }
 
     const placeholderData = { name, email, phone, message };
