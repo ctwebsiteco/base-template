@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/json-ld";
 import { SanityLive, sanityFetch } from "@/sanity/lib/live";
 import { isSanityConfigured } from "@/sanity/lib/client";
 import { DisableDraftMode } from "@/components/disable-draft-mode";
+import { RumClient } from "@/components/rum-client";
 
 import "./globals.css";
 
@@ -67,6 +68,7 @@ export default async function RootLayout({
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}
+        <RumClient />
       </body>
     </html>
   );
