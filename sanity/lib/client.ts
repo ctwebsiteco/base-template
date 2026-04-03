@@ -11,7 +11,9 @@ export const client: SanityClient | null = projectId
       apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2024-01-01",
       useCdn: true,
       stega: {
-        studioUrl: "/",
+        studioUrl:
+          process.env.NEXT_PUBLIC_PORTAL_URL ??
+          "https://portal.ctwebsiteco.com/editor",
       },
     })
   : null;
