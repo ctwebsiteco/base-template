@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { Inter } from "next/font/google";
 import { draftMode } from "next/headers";
 import { VisualEditing } from "next-sanity/visual-editing";
@@ -10,6 +9,7 @@ import { SanityLive, sanityFetch } from "@/sanity/lib/live";
 import { isSanityConfigured } from "@/sanity/lib/client";
 import { DisableDraftMode } from "@/components/disable-draft-mode";
 import { RumClient } from "@/components/rum-client";
+import Script from "next/script";
 
 import "./globals.css";
 
@@ -66,7 +66,18 @@ export default async function RootLayout({
           </>
         )}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+              strategy="lazyOnload"
+            />
+            <Script id="ga4-config" strategy="lazyOnload">{`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');
+            `}</Script>
+          </>
         )}
         <RumClient />
       </body>
