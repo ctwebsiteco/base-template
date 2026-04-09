@@ -1,105 +1,133 @@
 "use server";
 
 import { Resend } from "resend";
-import { contactSchema } from "@/lib/contact-schema";
+import { z } from "zod";
 import { client } from "@/sanity/lib/client";
-import { EMAIL_TEMPLATES_QUERY } from "@/sanity/lib/queries";
+import { CONTACT_FORM_QUERY } from "@/sanity/lib/queries";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+function replacePlaceholders(
+  template: string,
+  data: Record<string, string>
+): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
+}
+
+const fieldTypeToZod: Record<string, z.ZodTypeAny> = {
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  message: z
+    .string()
+    .min(10, "Message must be at least 10 characters")
+    .max(2000),
+  company: z.string().optional(),
+  service: z.string().optional(),
+  budget: z.string().optional(),
+};
 
 export type ContactFormState = {
   success: boolean;
   error?: string;
 };
 
-function replacePlaceholders(
-  template: string,
-  data: {
-    name: string;
-    email: string;
-    phone?: string;
-    message: string;
-  }
-): string {
-  return template
-    .replace(/\{\{name\}\}/g, data.name)
-    .replace(/\{\{email\}\}/g, data.email)
-    .replace(/\{\{phone\}\}/g, data.phone ?? "")
-    .replace(/\{\{message\}\}/g, data.message);
+interface FormField {
+  fieldType: string;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
 }
 
-const FALLBACK_BUSINESS_SUBJECT = "New Contact Form Submission from {{name}}";
-const FALLBACK_BUSINESS_BODY = `<h2>New Contact Form Submission</h2>
-<p><strong>Name:</strong> {{name}}</p>
-<p><strong>Email:</strong> {{email}}</p>
-<p><strong>Phone:</strong> {{phone}}</p>
-<p><strong>Message:</strong></p><p>{{message}}</p>`;
+interface FormConfig {
+  fields?: FormField[];
+  fromEmail: string;
+  toEmails: string[];
+  adminEmailTemplate: { subject: string; body: string };
+  autoReplyTemplate: { enabled?: boolean; subject: string; body: string };
+}
 
-const FALLBACK_CONFIRMATION_SUBJECT = "Thank you for reaching out";
-const FALLBACK_CONFIRMATION_BODY = `<p>Hi {{name}},</p>
-<p>Thanks for contacting us. We received your message and will get back to you within 24 hours.</p>
-<p>Best regards</p>`;
+function getFallbackConfig(): FormConfig {
+  return {
+    fields: [
+      { fieldType: "name", label: "Name", required: true },
+      { fieldType: "email", label: "Email", required: true },
+      { fieldType: "phone", label: "Phone", required: false },
+      { fieldType: "message", label: "Message", required: true },
+    ],
+    fromEmail: process.env.CONTACT_FROM_EMAIL || "noreply@example.com",
+    toEmails: (process.env.CONTACT_TO_EMAILS || "info@example.com").split(","),
+    adminEmailTemplate: {
+      subject: process.env.CONTACT_SUBJECT || "New Contact Form Submission",
+      body:
+        process.env.CONTACT_BODY ||
+        "<p><strong>Name:</strong> {{name}}</p><p><strong>Email:</strong> {{email}}</p><p><strong>Message:</strong> {{message}}</p>",
+    },
+    autoReplyTemplate: {
+      enabled: true,
+      subject: "We received your message!",
+      body: "<p>Hi {{name}},</p><p>Thanks for reaching out! We'll get back to you within 24 hours.</p>",
+    },
+  };
+}
+
+function buildSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const field of fields) {
+    const schema = fieldTypeToZod[field.fieldType];
+    if (schema) {
+      shape[field.fieldType] = field.required ? schema : schema.optional();
+    }
+  }
+  return z.object(shape);
+}
 
 export async function submitContactForm(
   _prev: ContactFormState,
   formData: FormData
 ): Promise<ContactFormState> {
-  const parsed = contactSchema.safeParse(Object.fromEntries(formData));
+  let formConfig: FormConfig | null = null;
+
+  if (client) {
+    try {
+      formConfig = await client.fetch(CONTACT_FORM_QUERY);
+    } catch {
+      // Sanity fetch failed — use env var fallback
+    }
+  }
+
+  if (!formConfig?.fields?.length) {
+    formConfig = getFallbackConfig();
+  }
+
+  const schema = buildSchema(formConfig.fields!);
+  const rawData = Object.fromEntries(formData);
+  const parsed = schema.safeParse(rawData);
+
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
-  const { name, email, message, phone } = parsed.data;
+
+  const { name, email, message, ...rest } = parsed.data;
+  const placeholderData: Record<string, string> = { name, email, message, ...rest };
 
   try {
-    let businessSubject = FALLBACK_BUSINESS_SUBJECT;
-    let businessBody = FALLBACK_BUSINESS_BODY;
-    let confirmationSubject = FALLBACK_CONFIRMATION_SUBJECT;
-    let confirmationBody = FALLBACK_CONFIRMATION_BODY;
+    await resend.emails.send({
+      from: formConfig.fromEmail,
+      to: formConfig.toEmails,
+      subject: replacePlaceholders(formConfig.adminEmailTemplate.subject, placeholderData),
+      html: replacePlaceholders(formConfig.adminEmailTemplate.body, placeholderData),
+    });
 
-    let fromEmail = process.env.CONTACT_FROM_EMAIL!;
-    let toEmails = process.env.CONTACT_TO_EMAILS!.split(",").map((e) => e.trim());
-
-    if (client) {
-      try {
-        const token = process.env.SANITY_API_READ_TOKEN;
-        const templates = await client
-          .withConfig({ token, useCdn: false })
-          .fetch(EMAIL_TEMPLATES_QUERY);
-        if (templates?.fromEmail) {
-          fromEmail = templates.fromEmail;
-        }
-        if (templates?.toEmails?.length) {
-          toEmails = templates.toEmails;
-        }
-        if (templates?.businessNotification) {
-          businessSubject = templates.businessNotification.subject;
-          businessBody = templates.businessNotification.body;
-        }
-        if (templates?.submitterConfirmation) {
-          confirmationSubject = templates.submitterConfirmation.subject;
-          confirmationBody = templates.submitterConfirmation.body;
-        }
-      } catch {
-        // Sanity fetch failed — use fallback templates and env var emails
-      }
+    if (formConfig.autoReplyTemplate?.enabled) {
+      await resend.emails.send({
+        from: formConfig.fromEmail,
+        to: email,
+        subject: replacePlaceholders(formConfig.autoReplyTemplate.subject, placeholderData),
+        html: replacePlaceholders(formConfig.autoReplyTemplate.body, placeholderData),
+      });
     }
 
-    const placeholderData = { name, email, phone, message };
-
-    await Promise.all([
-      resend.emails.send({
-        from: fromEmail,
-        to: toEmails,
-        subject: replacePlaceholders(businessSubject, placeholderData),
-        html: replacePlaceholders(businessBody, placeholderData),
-      }),
-      resend.emails.send({
-        from: fromEmail,
-        to: email,
-        subject: replacePlaceholders(confirmationSubject, placeholderData),
-        html: replacePlaceholders(confirmationBody, placeholderData),
-      }),
-    ]);
     return { success: true };
   } catch {
     return { success: false, error: "Failed to send message. Please try again." };
