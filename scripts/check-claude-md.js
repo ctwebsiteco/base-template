@@ -10,19 +10,19 @@ const rootDir = process.cwd();
 const requiredDirs = [
   "",
   "lib",
-  "lib/data",
   "sanity",
   "app",
   "components",
 ];
 
 // Directories that need CLAUDE.md if they contain agents/ or skills/ subdirs
+// (.claude is a Claude Code settings dir, not an app module — skip it)
 function findSpecialDirs(dir) {
   const results = [];
   try {
     const items = readdirSync(dir);
     for (const item of items) {
-      if (item === "node_modules" || item === ".git" || item === ".husky") continue;
+      if (item === "node_modules" || item === ".git" || item === ".husky" || item === ".claude") continue;
       const fullPath = join(dir, item);
       const stat = statSync(fullPath);
       if (stat.isDirectory()) {
