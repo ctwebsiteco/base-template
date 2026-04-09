@@ -15,20 +15,24 @@ export async function JsonLd() {
   }
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+  const companyName = company?.name || process.env.NEXT_PUBLIC_COMPANY_NAME || "Business Name";
+  const companyDescription =
+    company?.description ||
+    "Local business providing quality services to the community.";
+  const companyPhone = company?.phone || process.env.NEXT_PUBLIC_COMPANY_PHONE || "(555) 555-5555";
+  const companyEmail = company?.email || process.env.NEXT_PUBLIC_COMPANY_EMAIL || undefined;
 
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: company?.name || "Business Name",
-    description:
-      company?.description ||
-      "Local business providing quality services to the community.",
+    name: companyName,
+    description: companyDescription,
     url: BASE_URL,
-    telephone: company?.phone || "(555) 555-5555",
+    telephone: companyPhone,
   };
 
-  if (company?.email) {
-    schema.email = company.email;
+  if (companyEmail) {
+    schema.email = companyEmail;
   }
 
   if (company?.address) {

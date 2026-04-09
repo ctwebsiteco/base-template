@@ -1,19 +1,19 @@
 import Link from "next/link";
 
-// TODO: Replace with site navigation
+// Navigation links — add site-specific routes here
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/contact", label: "Contact" },
-  // Add site-specific nav links
 ];
 
 export function SiteHeader() {
+  const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || "Business Name";
+
   return (
     <header className="border-b bg-background" data-testid="site-header">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="text-lg font-bold">
-          {/* TODO: Replace with company name or logo */}
-          Business Name
+          {companyName}
         </Link>
         <nav className="hidden gap-6 md:flex">
           {navLinks.map((link) => (

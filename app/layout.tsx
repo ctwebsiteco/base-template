@@ -51,9 +51,14 @@ export default async function RootLayout({
 }>) {
   const { isEnabled: isDraft } = await draftMode();
 
+  const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || "Business Name";
+  const companyEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || "info@example.com";
+  const companyPhone = process.env.NEXT_PUBLIC_COMPANY_PHONE || "(555) 555-5555";
+  const companyAddress = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || "City, State";
+
   return (
     <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" style={{ "--company-name": companyName, "--company-email": companyEmail, "--company-phone": companyPhone, "--company-address": companyAddress } as React.CSSProperties}>
         <JsonLd />
         <SiteHeader />
         <main>{children}</main>
