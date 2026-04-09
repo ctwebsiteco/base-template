@@ -1,57 +1,59 @@
-# Base Template Project
+# Base Template — Blank Canvas
 
-## Quick Start
-1. Copy `.env.local.example` to `.env.local` and fill in values
-2. `pnpm install`
-3. `pnpm dev`
+This is a starting point for custom CT Website Co client sites. No pre-built pages, sections, or content patterns are included. Every site is unique and built from scratch.
 
-## Customization Checklist (in order)
+## What's Included
 
-### 1. Environment & Sanity
-- [ ] Create Sanity project → set NEXT_PUBLIC_SANITY_PROJECT_ID
-- [ ] Set all env vars in .env.local
-- [ ] Run `pnpm typegen`
+- **Next.js 16** with App Router + TypeScript
+- **Sanity.io** CMS with nullable client (check `if (client)` before fetch)
+- **Resend** for transactional email
+- **Zod** validation for all forms
+- **shadcn/ui** components ready to use
+- **RUM + GA4** analytics wired up
+- **Form builder** pattern — fields configured in Sanity, not hardcoded
 
-### 2. Branding
-- [ ] Replace Inter font in app/layout.tsx with client font
-- [ ] Update CSS variables in app/globals.css for brand colors
-- [ ] Update metadata in app/layout.tsx (title, description, domain)
-- [ ] Set NEXT_PUBLIC_SITE_URL
-- [ ] Generate favicon assets from logo (favicon.ico, apple-icon.png, icon.png)
+## What's NOT Included
 
-### 3. Schemas & Content
-- [ ] Analyze v0 site content → create site-specific Sanity schemas
-- [ ] Add schemas to sanity/schemas/index.ts
-- [ ] Run `pnpm typegen`
-- [ ] Add GROQ queries to sanity/lib/queries.ts
+- No homepage sections (hero, features, services, testimonials, etc.)
+- No pre-built page templates
+- No navigation structure (besides a basic nav link list)
+- No content types beyond `companyInfo`, `contactForm`, and reusable object schemas
 
-### 4. Pages & Components
-- [ ] Replace placeholder homepage with v0 components
-- [ ] Create all page routes
-- [ ] Wire pages to Sanity via sanityFetch
-- [ ] Replace site-header.tsx and site-footer.tsx
-- [ ] Update json-ld.tsx @type if needed
+## Getting Started
 
-### 5. Contact Form
-- [ ] Add/modify fields in lib/contact-schema.ts
-- [ ] Update zones 1-4 in app/actions/contact.ts
-- [ ] Update emailTemplates.ts placeholder list
-- [ ] Customize contact-form.tsx for site fields
+```bash
+git clone git@github.com:CTWebsiteCo/base-template.git v0-client-name
+cd v0-client-name
+cp .env.local.example .env.local
+# Fill in all values
 
-### 6. AI Readiness
-- [ ] Update robots.ts with production domain
-- [ ] Update sitemap.ts with all routes
-- [ ] Update llms.txt/route.ts with site-specific content
-- [ ] Update json-ld.tsx with full business data
+pnpm install
+pnpm dev
+```
 
-### 7. Testing
-- [ ] Update routes in infrastructure.spec.ts
-- [ ] Update contact.spec.ts for site fields
-- [ ] Add page-specific E2E tests
-- [ ] Update unit test mocks
+## Workflow
 
-### 8. Verify
-- [ ] pnpm lint (zero warnings)
-- [ ] pnpm build (passes)
-- [ ] pnpm test (all pass)
-- [ ] pnpm test:e2e (all pass)
+1. Configure `.env.local` with Sanity project ID, Resend key, company info
+2. Run `pnpm typegen` after adding Sanity schemas
+3. Build pages from scratch per the client's needs
+4. Wire forms using the form builder pattern
+
+## Env Vars Required
+
+See `.env.local.example` — all documented there.
+
+## Key Patterns
+
+- **Sanity client is nullable** — always `if (client)` before fetch
+- **Forms are dynamic** — field config comes from Sanity `contactForm` document
+- **GROQ queries** use `defineQuery` from `next-sanity`
+- **SEO metadata** always uses `stega: false` on Sanity fetches
+- **`text-balance`** on all headings
+
+## Agent Guides
+
+See `agents/` directory for task-specific guides:
+- `form-builder.md` — building dynamic contact forms
+- `schema-design.md` — Sanity schema best practices
+- `deployment.md` — Vercel deployment
+- `seo.md` — SEO setup

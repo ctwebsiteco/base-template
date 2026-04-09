@@ -30,4 +30,25 @@ export const EMAIL_TEMPLATES_QUERY = defineQuery(`
   }
 `);
 
-// Add site-specific queries below
+export const CONTACT_FORM_QUERY = defineQuery(`
+  *[_type == "contactForm"][0] {
+    formName,
+    submitButtonText,
+    successMessage,
+    fromEmail,
+    toEmails,
+    adminEmailTemplate { subject, body },
+    autoReplyTemplate { enabled, subject, body },
+    fields[] {
+      _key,
+      fieldType,
+      label,
+      placeholder,
+      required,
+      showIf {
+        otherField,
+        hasValue
+      }
+    }
+  }
+`);
