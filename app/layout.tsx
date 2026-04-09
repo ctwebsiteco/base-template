@@ -5,7 +5,7 @@ import { VisualEditing } from "next-sanity/visual-editing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
-import { SanityLive, sanityFetch } from "@/sanity/lib/live";
+import { SanityLive } from "@/sanity/lib/live";
 import { isSanityConfigured } from "@/sanity/lib/client";
 import { DisableDraftMode } from "@/components/disable-draft-mode";
 import { RumClient } from "@/components/rum-client";

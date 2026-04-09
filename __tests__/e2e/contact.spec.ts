@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 
+// NOTE: /contact page must be created first before running these tests.
+// These are reference tests — copy the pattern when building a contact page.
+// Once /contact exists, run: pnpm test:e2e --project=Desktop Chrome
+
 test.describe("Contact page form", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/contact");
@@ -59,7 +63,7 @@ test.describe("Contact page form", () => {
         "E2E test — verifying email sends via Resend test credentials."
       );
     await page.getByTestId("contact-submit").click();
-    await expect(page.getByText(/thank you/i)).toBeVisible({
+    await expect(page.getByText(/thank you/i).first()).toBeVisible({
       timeout: 15000,
     });
     await expect(page.getByText(/failed to send/i)).not.toBeVisible();

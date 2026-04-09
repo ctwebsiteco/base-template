@@ -1,115 +1,70 @@
 "use server";
 
 import { Resend } from "resend";
-import { z } from "zod";
 import { client } from "@/sanity/lib/client";
 import { CONTACT_FORM_QUERY } from "@/sanity/lib/queries";
+import { buildContactSchema, type FormField } from "@/lib/contact-schema";
+import { contactForm as localContactForm } from "@/data/contactForm";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 function replacePlaceholders(
   template: string,
-  data: Record<string, string>
+  data: Record<string, string>,
 ): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
 }
-
-const fieldTypeToZod: Record<string, z.ZodTypeAny> = {
-  name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  message: z
-    .string()
-    .min(10, "Message must be at least 10 characters")
-    .max(2000),
-  company: z.string().optional(),
-  service: z.string().optional(),
-  budget: z.string().optional(),
-};
 
 export type ContactFormState = {
   success: boolean;
   error?: string;
 };
 
-interface FormField {
-  fieldType: string;
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-}
-
-interface FormConfig {
+type FormConfig = {
   fields?: FormField[];
   fromEmail: string;
   toEmails: string[];
   adminEmailTemplate: { subject: string; body: string };
   autoReplyTemplate: { enabled?: boolean; subject: string; body: string };
-}
-
-function getFallbackConfig(): FormConfig {
-  return {
-    fields: [
-      { fieldType: "name", label: "Name", required: true },
-      { fieldType: "email", label: "Email", required: true },
-      { fieldType: "phone", label: "Phone", required: false },
-      { fieldType: "message", label: "Message", required: true },
-    ],
-    fromEmail: process.env.CONTACT_FROM_EMAIL || "noreply@example.com",
-    toEmails: (process.env.CONTACT_TO_EMAILS || "info@example.com").split(","),
-    adminEmailTemplate: {
-      subject: process.env.CONTACT_SUBJECT || "New Contact Form Submission",
-      body:
-        process.env.CONTACT_BODY ||
-        "<p><strong>Name:</strong> {{name}}</p><p><strong>Email:</strong> {{email}}</p><p><strong>Message:</strong> {{message}}</p>",
-    },
-    autoReplyTemplate: {
-      enabled: true,
-      subject: "We received your message!",
-      body: "<p>Hi {{name}},</p><p>Thanks for reaching out! We'll get back to you within 24 hours.</p>",
-    },
-  };
-}
-
-function buildSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  const shape: Record<string, z.ZodTypeAny> = {};
-  for (const field of fields) {
-    const schema = fieldTypeToZod[field.fieldType];
-    if (schema) {
-      shape[field.fieldType] = field.required ? schema : schema.optional();
-    }
-  }
-  return z.object(shape);
-}
+};
 
 export async function submitContactForm(
   _prev: ContactFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ContactFormState> {
   let formConfig: FormConfig | null = null;
 
   if (client) {
     try {
-      formConfig = await client.fetch(CONTACT_FORM_QUERY);
+      const fetched = await client.fetch<FormConfig>(CONTACT_FORM_QUERY);
+      if (fetched?.fields?.length) {
+        formConfig = fetched;
+      }
     } catch {
-      // Sanity fetch failed — use env var fallback
+      // Sanity fetch failed — fall back to local seed
     }
   }
 
-  if (!formConfig?.fields?.length) {
-    formConfig = getFallbackConfig();
+  // Fall back to local seed — always has required shape
+  if (!formConfig) {
+    formConfig = localContactForm as FormConfig;
   }
 
-  const schema = buildSchema(formConfig.fields!);
+  const schema = buildContactSchema(formConfig.fields || []);
   const rawData = Object.fromEntries(formData);
   const parsed = schema.safeParse(rawData);
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const issues = (parsed as any).error.issues;
+    return { success: false, error: issues?.[0]?.message || "Validation failed" };
   }
 
-  const { name, email, message, ...rest } = parsed.data;
-  const placeholderData: Record<string, string> = { name, email, message, ...rest };
+  const placeholderData: Record<string, string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const [k, v] of Object.entries(parsed.data as any)) {
+    placeholderData[k] = String(v ?? "");
+  }
 
   try {
     await resend.emails.send({
@@ -119,12 +74,13 @@ export async function submitContactForm(
       html: replacePlaceholders(formConfig.adminEmailTemplate.body, placeholderData),
     });
 
-    if (formConfig.autoReplyTemplate?.enabled) {
+    const email = parsed.data.email as string | undefined;
+    if (formConfig.autoReplyTemplate?.enabled && email) {
       await resend.emails.send({
         from: formConfig.fromEmail,
         to: email,
         subject: replacePlaceholders(formConfig.autoReplyTemplate.subject, placeholderData),
-        html: replacePlaceholders(formConfig.autoReplyTemplate.body, placeholderData),
+        html: replacePlaceholders(formConfig.autoReplyTemplate.body || "", placeholderData),
       });
     }
 

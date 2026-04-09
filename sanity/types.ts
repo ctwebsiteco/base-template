@@ -39,17 +39,44 @@ export type CompanyInfo = {
   };
 };
 
-export type EmailTemplates = {
-  _type: "emailTemplates";
+export type ContactForm = {
+  _type: "contactForm";
   _id: string;
+  formName?: string;
+  submitButtonText?: string;
+  successMessage?: string;
   fromEmail?: string;
   toEmails?: string[];
-  businessNotification?: {
+  adminEmailTemplate?: {
     subject?: string;
     body?: string;
   };
-  submitterConfirmation?: {
+  autoReplyTemplate?: {
+    enabled?: boolean;
     subject?: string;
     body?: string;
+  };
+  fields?: FormField[];
+};
+
+export type FormField = {
+  _key: string;
+  fieldMode?: "standard" | "custom";
+  standardType?: string;
+  customType?: string;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: {
+    list?: string[];
+  };
+  validation?: {
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+  };
+  showIf?: {
+    otherField?: string;
+    hasValue?: boolean;
   };
 };

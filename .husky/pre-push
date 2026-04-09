@@ -1,3 +1,9 @@
-pnpm lint
-pnpm test
-pnpm test:e2e
+echo "Running pre-push checks..."
+
+pnpm typecheck || { echo "Type check failed"; exit 1; }
+pnpm lint || { echo "Lint failed"; exit 1; }
+pnpm test || { echo "Unit tests failed"; exit 1; }
+pnpm test:e2e || { echo "E2E tests failed"; exit 1; }
+pnpm check:claude-md || { echo "CLAUDE.md check failed"; exit 1; }
+
+echo "All pre-push checks passed!"

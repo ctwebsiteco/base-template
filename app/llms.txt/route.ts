@@ -1,31 +1,20 @@
-import { client } from "@/sanity/lib/client";
+import { getCompanyInfo } from "@/lib/data/company";
 
 export async function GET() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let companyInfo: any = null;
+  const company = await getCompanyInfo();
 
-  if (client) {
-    try {
-      companyInfo = await client.fetch(
-        `*[_type == "companyInfo"][0] { name, phone, email, address, tagline, description, licensingInfo, businessHours, yearsExperience }`
-      );
-    } catch {
-      // Sanity fetch failed — use fallback content
-    }
-  }
-
-  const companyName = companyInfo?.name || "Business Name";
-  const phone = companyInfo?.phone || "(555) 555-5555";
-  const emailAddr = companyInfo?.email || "info@example.com";
-  const addressObj = companyInfo?.address;
+  const companyName = company.name || "Business Name";
+  const phone = company.phone || "(555) 555-5555";
+  const emailAddr = company.email || "info@example.com";
+  const addressObj = company.address;
   const location = addressObj
     ? [addressObj.city, addressObj.state].filter(Boolean).join(", ")
     : "City, ST";
   const tagline =
-    companyInfo?.tagline ||
+    company.tagline ||
     "Your trusted local service provider delivering quality workmanship and exceptional customer service.";
   const description =
-    companyInfo?.description ||
+    company.description ||
     "We are a locally owned and operated business committed to providing the highest quality services to our community. Our team of experienced professionals brings years of expertise to every project, ensuring outstanding results that exceed expectations.";
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";

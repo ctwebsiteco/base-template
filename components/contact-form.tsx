@@ -18,10 +18,14 @@ interface ContactFormProps {
   successMessage?: string
 }
 
-export function ContactForm({ fields, submitButtonText = "Send Message", successMessage }: ContactFormProps) {
+export function ContactForm({
+  fields,
+  submitButtonText = "Send Message",
+  successMessage,
+}: ContactFormProps) {
   const [state, formAction, isPending] = useActionState<ContactFormState, FormData>(
     submitContactForm,
-    { success: false }
+    { success: false },
   )
 
   const schema = buildContactSchema(fields)
@@ -65,35 +69,77 @@ export function ContactForm({ fields, submitButtonText = "Send Message", success
         </div>
       )}
 
-      {fields.map((field) => (
-        <div key={field.fieldType}>
-          <Label htmlFor={field.fieldType}>{field.label}</Label>
-          {field.fieldType === "message" ? (
-            <Textarea
-              id={field.fieldType}
-              rows={5}
-              placeholder={field.placeholder}
-              data-testid={`contact-${field.fieldType}`}
-              {...register(field.fieldType)}
-            />
-          ) : (
-            <Input
-              id={field.fieldType}
-              type={
-                field.fieldType === "email" ? "email" : field.fieldType === "phone" ? "tel" : "text"
-              }
-              placeholder={field.placeholder}
-              data-testid={`contact-${field.fieldType}`}
-              {...register(field.fieldType)}
-            />
-          )}
-          {errors[field.fieldType] && (
-            <p className="mt-1 text-xs text-destructive" data-testid={`error-${field.fieldType}`}>
-              {errors[field.fieldType].message as string}
-            </p>
-          )}
-        </div>
-      ))}
+      {fields.map((field) => {
+        const fieldKey =
+          field.fieldMode === "custom" ? field.customType : field.standardType
+        if (!fieldKey) return null
+
+        const inputType =
+          field.standardType === "message" || field.standardType === "textarea"
+            ? "textarea"
+            : field.standardType === "checkbox"
+              ? "checkbox"
+              : field.standardType === "select"
+                ? "select"
+                : "input"
+
+        return (
+          <div key={fieldKey}>
+            <Label htmlFor={fieldKey}>{field.label}</Label>
+            {inputType === "textarea" ? (
+              <Textarea
+                id={fieldKey}
+                rows={5}
+                placeholder={field.placeholder}
+                data-testid={`contact-${fieldKey}`}
+                {...register(fieldKey)}
+              />
+            ) : inputType === "checkbox" ? (
+              <input
+                type="checkbox"
+                id={fieldKey}
+                className="mt-1 h-4 w-4"
+                {...register(fieldKey)}
+              />
+            ) : inputType === "select" ? (
+              <select
+                id={fieldKey}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                {...register(fieldKey)}
+              >
+                <option value="">Select...</option>
+                {(field.options?.list || []).map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                id={fieldKey}
+                type={
+                  field.standardType === "email"
+                    ? "email"
+                    : field.standardType === "phone"
+                      ? "tel"
+                      : "text"
+                }
+                placeholder={field.placeholder}
+                data-testid={`contact-${fieldKey}`}
+                {...register(fieldKey)}
+              />
+            )}
+            {errors[fieldKey] && (
+              <p
+                className="mt-1 text-xs text-destructive"
+                data-testid={`error-${fieldKey}`}
+              >
+                {String(errors[fieldKey]?.message)}
+              </p>
+            )}
+          </div>
+        )
+      })}
 
       <Button type="submit" disabled={isPending} className="w-full" data-testid="contact-submit">
         {isPending ? "Sending..." : submitButtonText}

@@ -21,15 +21,6 @@ export const COMPANY_INFO_QUERY = defineQuery(`
   }
 `);
 
-export const EMAIL_TEMPLATES_QUERY = defineQuery(`
-  *[_type == "emailTemplates"][0] {
-    fromEmail,
-    toEmails,
-    businessNotification { subject, body },
-    submitterConfirmation { subject, body }
-  }
-`);
-
 export const CONTACT_FORM_QUERY = defineQuery(`
   *[_type == "contactForm"][0] {
     formName,
@@ -41,10 +32,14 @@ export const CONTACT_FORM_QUERY = defineQuery(`
     autoReplyTemplate { enabled, subject, body },
     fields[] {
       _key,
-      fieldType,
+      fieldMode,
+      standardType,
+      customType,
       label,
       placeholder,
       required,
+      options { list },
+      validation { minLength, maxLength, pattern },
       showIf {
         otherField,
         hasValue

@@ -1,23 +1,72 @@
 # Base Template — Blank Canvas
 
-This is a starting point for custom CT Website Co client sites. No pre-built pages, sections, or content patterns are included. Every site is unique and built from scratch.
+Next.js 16 + Sanity.io blank canvas for CT Website Co client sites. Every site is custom-built from scratch.
 
-## What's Included
+## Tech Stack
 
-- **Next.js 16** with App Router + TypeScript
-- **Sanity.io** CMS with nullable client (check `if (client)` before fetch)
-- **Resend** for transactional email
-- **Zod** validation for all forms
-- **shadcn/ui** components ready to use
-- **RUM + GA4** analytics wired up
-- **Form builder** pattern — fields configured in Sanity, not hardcoded
+- **Next.js 16** App Router + TypeScript
+- **Sanity.io** CMS (nullable client)
+- **Resend** transactional email
+- **Zod** form validation
+- **shadcn/ui** components
+- **RUM + GA4** analytics
+- **Playwright** e2e tests
 
-## What's NOT Included
+## Source of Truth
 
-- No homepage sections (hero, features, services, testimonials, etc.)
-- No pre-built page templates
-- No navigation structure (besides a basic nav link list)
-- No content types beyond `companyInfo`, `contactForm`, and reusable object schemas
+**Local seed data is the source of truth.** Sanity overrides when configured.
+
+```
+data/
+  companyInfo.ts    ← seed data (Sanity document shape)
+  contactForm.ts   ← seed data for form config
+
+lib/data/
+  company.ts       → getCompanyInfo()   ← ONLY accessor for company data
+  forms.ts        → getContactForm()   ← ONLY accessor for form config
+```
+
+Pages/components call `getCompanyInfo()` and `getContactForm()` — never `client.fetch()` directly.
+
+## Non-Negotiable Patterns
+
+1. **Data access**: Use `lib/data/` accessors exclusively in pages/components
+2. **Sanity client is nullable**: `if (client)` only in low-level utilities (`sanity/lib/`)
+3. **GROQ queries**: Use `defineQuery` from `next-sanity` in `sanity/lib/queries.ts`
+4. **SEO fetches**: Always `stega: false`
+5. **Headings**: Always `text-balance` class
+6. **Forms**: Use `buildContactSchema()` from `lib/contact-schema.ts`
+7. **Typegen**: Run `pnpm typegen` after changing Sanity schemas
+8. **Tests**: `pnpm test:e2e` — test form validation AND success; use `data-testid`
+
+## Skills
+
+Load skills on demand for specialized tasks:
+
+| Task | Skill |
+|------|-------|
+| Building/editing contact forms | `/form-builder` |
+| Adding/changing Sanity schemas | `/schema-design` |
+| Page SEO, JSON-LD, sitemap | `/seo` |
+| Vercel deployment + Sanity setup | `/deployment` |
+| Writing/running Playwright tests | `/testing` |
+
+## Directory Map
+
+```
+app/           pages, layouts, server actions
+components/   UI components (shadcn in components/ui/)
+lib/           utilities, data accessors, metadata helpers
+sanity/        schemas, GROQ queries, client, image helpers
+data/          local seed data (mirrors Sanity document shapes)
+seed/          NDJSON import files for Sanity
+__tests__/e2e/ Playwright smoke tests
+.claude/       skills and subagents
+```
+
+## Env Vars
+
+See `.env.local.example`. Client-side vars need `NEXT_PUBLIC_` prefix.
 
 ## Getting Started
 
@@ -25,35 +74,17 @@ This is a starting point for custom CT Website Co client sites. No pre-built pag
 git clone git@github.com:CTWebsiteCo/base-template.git v0-client-name
 cd v0-client-name
 cp .env.local.example .env.local
-# Fill in all values
+# Fill in values
 
 pnpm install
 pnpm dev
 ```
 
-## Workflow
+## Subagents
 
-1. Configure `.env.local` with Sanity project ID, Resend key, company info
-2. Run `pnpm typegen` after adding Sanity schemas
-3. Build pages from scratch per the client's needs
-4. Wire forms using the form builder pattern
+For multi-step tasks, use subagents:
 
-## Env Vars Required
+- **page-scaffolding**: Create a new page end-to-end with tests
+- **schema-migration**: Add a new Sanity content type end-to-end
 
-See `.env.local.example` — all documented there.
-
-## Key Patterns
-
-- **Sanity client is nullable** — always `if (client)` before fetch
-- **Forms are dynamic** — field config comes from Sanity `contactForm` document
-- **GROQ queries** use `defineQuery` from `next-sanity`
-- **SEO metadata** always uses `stega: false` on Sanity fetches
-- **`text-balance`** on all headings
-
-## Agent Guides
-
-See `agents/` directory for task-specific guides:
-- `form-builder.md` — building dynamic contact forms
-- `schema-design.md` — Sanity schema best practices
-- `deployment.md` — Vercel deployment
-- `seo.md` — SEO setup
+Invoke with: `"Use the page-scaffolding subagent to add a services page"`

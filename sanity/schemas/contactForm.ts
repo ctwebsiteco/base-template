@@ -1,6 +1,6 @@
 import { defineType, defineField, defineArrayMember } from "sanity"
 
-const formFieldTypes = [
+const standardFieldTypes = [
   { title: "Name", value: "name" },
   { title: "Email", value: "email" },
   { title: "Phone", value: "phone" },
@@ -8,9 +8,12 @@ const formFieldTypes = [
   { title: "Company", value: "company" },
   { title: "Service", value: "service" },
   { title: "Budget", value: "budget" },
+  { title: "Textarea", value: "textarea" },
+  { title: "Select", value: "select" },
+  { title: "Checkbox", value: "checkbox" },
 ]
 
-const fieldTypeLabels: Record<string, string> = {
+const standardTypeLabels: Record<string, string> = {
   name: "Name",
   email: "Email",
   phone: "Phone",
@@ -18,6 +21,9 @@ const fieldTypeLabels: Record<string, string> = {
   company: "Company",
   service: "Service",
   budget: "Budget",
+  textarea: "Textarea",
+  select: "Select",
+  checkbox: "Checkbox",
 }
 
 export default defineType({
@@ -55,14 +61,61 @@ export default defineType({
           name: "formField",
           fields: [
             defineField({
-              name: "fieldType",
-              title: "Field Type",
+              name: "fieldMode",
+              title: "Field Mode",
               type: "string",
               options: {
-                list: formFieldTypes,
+                list: [
+                  { title: "Standard Field", value: "standard" },
+                  { title: "Custom Field", value: "custom" },
+                ],
                 layout: "radio",
               },
+              initialValue: "standard",
               validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "standardType",
+              title: "Standard Type",
+              type: "string",
+              options: { list: standardFieldTypes, layout: "dropdown" },
+              hidden: ({ parent }) => parent?.fieldMode !== "standard",
+              validation: (rule) =>
+                rule.custom((value, context) => {
+                  const parent = context.parent as { fieldMode?: string } | null | undefined;
+                  if (parent?.fieldMode === "standard" && !value)
+                    return "Standard type is required for standard fields"
+                  return true
+                }),
+            }),
+            defineField({
+              name: "customType",
+              title: "Custom Type Name",
+              type: "string",
+              description:
+                "Unique identifier for this custom field (e.g., 'project_timeline'). Used as the field key in form data.",
+              hidden: ({ parent }) => parent?.fieldMode !== "custom",
+              validation: (rule) =>
+                rule.custom((value, context) => {
+                  const parent = context.parent as { fieldMode?: string; customType?: string } | null | undefined;
+                  if (parent?.fieldMode === "custom" && !value)
+                    return "Custom type name is required for custom fields"
+                  if (
+                    parent?.fieldMode === "custom" &&
+                    typeof value === "string"
+                  ) {
+                    const doc = context.document as { fields?: Array<{ fieldMode?: string; customType?: string }> } | null | undefined;
+                    const allFields = doc?.fields || [];
+                    const duplicates = allFields.filter(
+                      (f) =>
+                        f.fieldMode === "custom" &&
+                        f.customType === value
+                    )
+                    if (duplicates.length > 1)
+                      return "Duplicate custom type name — each custom field must have a unique type name"
+                  }
+                  return true
+                }),
             }),
             defineField({
               name: "label",
@@ -82,34 +135,75 @@ export default defineType({
               initialValue: false,
             }),
             defineField({
+              name: "options",
+              title: "Options (for Select/Dropdown)",
+              type: "object",
+              fields: [
+                defineField({
+                  name: "list",
+                  title: "Options List",
+                  type: "array",
+                  of: [{ type: "string" }],
+                  description:
+                    "Dropdown options. Leave empty for a text input.",
+                }),
+              ],
+              hidden: ({ parent }) =>
+                !["select"].includes(parent?.standardType || "") &&
+                parent?.fieldMode !== "custom",
+            }),
+            defineField({
+              name: "validation",
+              title: "Validation Rules (Custom Fields)",
+              type: "object",
+              fields: [
+                defineField({
+                  name: "minLength",
+                  title: "Min Length",
+                  type: "number",
+                }),
+                defineField({
+                  name: "maxLength",
+                  title: "Max Length",
+                  type: "number",
+                }),
+                defineField({
+                  name: "pattern",
+                  title: "Regex Pattern",
+                  type: "string",
+                  description: "e.g., '^\\d{3}-\\d{3}-\\d{4}$' for a phone number",
+                }),
+              ],
+              hidden: ({ parent }) => parent?.fieldMode !== "custom",
+            }),
+            defineField({
               name: "showIf",
               title: "Show This Field When",
               type: "object",
               fields: [
                 defineField({
                   name: "otherField",
-                  title: "Other Field Type",
+                  title: "Other Field",
                   type: "string",
-                  options: {
-                    list: formFieldTypes.filter((t) => t.value !== "message").map((t) => ({
-                      title: t.title,
-                      value: t.value,
-                    })),
-                  },
+                  description:
+                    "Field type or custom type name to check. E.g., 'service' to show this field only when a service is selected.",
                 }),
                 defineField({
                   name: "hasValue",
                   title: "Has Any Value",
                   type: "boolean",
                   initialValue: true,
+                  description:
+                    "Show when the other field has any value. Disable to show when the other field is empty.",
                 }),
               ],
             }),
           ],
           preview: {
-            select: { title: "label", subtitle: "fieldType" },
-            prepare({ title, subtitle }) {
-              return { title, subtitle: subtitle ? fieldTypeLabels[subtitle] || subtitle : "" }
+            select: { title: "label", subtitle: "standardType", custom: "customType", mode: "fieldMode" },
+            prepare({ title, subtitle, custom, mode }) {
+              const sub = mode === "custom" ? `custom: ${custom}` : standardTypeLabels[subtitle || ""] || subtitle || ""
+              return { title, subtitle: sub }
             },
           },
         }),
@@ -139,15 +233,18 @@ export default defineType({
           name: "subject",
           title: "Subject Line",
           type: "string",
-          description: "Placeholders: {{name}}, {{email}}, {{phone}}, {{message}}, etc.",
+          description: "Placeholders: {{name}}, {{email}}, {{phone}}, {{message}}, or any custom field like {{project_timeline}}",
           initialValue: "New Contact Form Submission",
+          validation: (rule) => rule.required(),
         }),
         defineField({
           name: "body",
           title: "Body (HTML)",
           type: "text",
           rows: 10,
-          description: "Use {{fieldName}} placeholders. Example: {{name}} - {{message}}",
+          description:
+            "Use {{fieldName}} placeholders. Include all fields you want to capture. Example: {{name}} - {{email}}\n\n{{message}}",
+          validation: (rule) => rule.required(),
         }),
       ],
     }),
@@ -168,6 +265,7 @@ export default defineType({
           type: "string",
           description: "Available placeholders: {{name}}",
           initialValue: "We received your message!",
+          hidden: ({ parent }) => !parent?.enabled,
         }),
         defineField({
           name: "body",

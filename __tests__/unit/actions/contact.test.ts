@@ -13,20 +13,25 @@ vi.mock("resend", () => ({
 
 vi.mock("@/sanity/lib/client", () => ({
   client: {
-    withConfig: () => ({
-      fetch: vi.fn().mockResolvedValue({
-        fromEmail: "noreply@example.com",
-        toEmails: ["owner@example.com"],
-        businessNotification: {
-          subject: "New inquiry from {{name}}",
-          body: "<p>{{name}} ({{email}}) — {{message}}</p>",
-        },
-        submitterConfirmation: {
-          subject: "Thanks {{name}}",
-          body: "<p>Hi {{name}}, we got your message.</p>",
-        },
-      }),
+    fetch: vi.fn().mockResolvedValue({
+      fromEmail: "noreply@example.com",
+      toEmails: ["owner@example.com"],
+      fields: [
+        { _key: "1", fieldMode: "standard", standardType: "name", label: "Name", required: true },
+        { _key: "2", fieldMode: "standard", standardType: "email", label: "Email", required: true },
+        { _key: "4", fieldMode: "standard", standardType: "message", label: "Message", required: true },
+      ],
+      adminEmailTemplate: {
+        subject: "New inquiry from {{name}}",
+        body: "<p>{{name}} ({{email}}) — {{message}}</p>",
+      },
+      autoReplyTemplate: {
+        enabled: true,
+        subject: "Thanks {{name}}",
+        body: "<p>Hi {{name}}, we got your message.</p>",
+      },
     }),
+    withConfig: vi.fn().mockReturnThis(),
   },
 }));
 
