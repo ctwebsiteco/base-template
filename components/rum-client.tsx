@@ -21,7 +21,7 @@ function getConnectionType(): string {
 
 export function RumClient() {
   useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_RUM_TOKEN || ""
+    const token = process.env.NEXT_PUBLIC_RUM_TOKEN
     if (!token) return
 
     import("web-vitals").then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {

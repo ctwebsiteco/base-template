@@ -12,14 +12,14 @@ export default async function HomePage() {
     }
   }
 
-  const name = company?.name ?? "Business Name";
+  const name = company?.name ?? process.env.NEXT_PUBLIC_COMPANY_NAME ?? "Business Name";
   const tagline =
     company?.tagline ?? "Your trusted local service provider.";
   const description =
     company?.description ??
     "We provide high-quality services to residential and commercial customers. Contact us today for a free estimate.";
-  const phone = company?.phone ?? "(555) 555-5555";
-  const email = company?.email ?? "info@example.com";
+  const phone = company?.phone ?? process.env.NEXT_PUBLIC_COMPANY_PHONE ?? "(555) 555-5555";
+  const email = company?.email ?? process.env.NEXT_PUBLIC_COMPANY_EMAIL ?? "info@example.com";
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16">
